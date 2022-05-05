@@ -69,8 +69,8 @@ st.metric(label="overall perfomance",value=f"{init_gains}%")
 MODEL_URL = 'MODEL_URL'
 
 params = {
-    'coins':[coin_1,coin_2,coin_3],
-    'ratios':[ratio_1,ratio_2,ratio_3]
+    'coins':coins,
+    'ratios':ratios
 }
 
 st.button('Adjust My Porflio')
