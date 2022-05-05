@@ -1,0 +1,8 @@
+streamlit
+random
+sqlite3
+qtpy
+plotly
+pandas
+datetime
+requests
