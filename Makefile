@@ -11,7 +11,7 @@ install_requirements:
 # ----------------------------------
 
 streamlit:
-	-@streamlit run portfolio_manager.py
+	-@streamlit run crypto_assis_streamlit.py
 
 heroku_login:
 	-@heroku login
