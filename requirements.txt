@@ -4,3 +4,4 @@ plotly
 pandas
 datetime
 requests
+altair

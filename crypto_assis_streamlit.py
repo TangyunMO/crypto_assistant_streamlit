@@ -1,20 +1,11 @@
-from email.mime import base
-from multiprocessing.sharedctypes import Value
-from random import randint, random
-from sqlite3 import Timestamp
-from this import d
 from time import strftime
-from turtle import window_width
-from matplotlib import container
-from matplotlib.pyplot import title
 from qtpy import API
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import requests
 import json
-import numpy as np
 import altair as alt
 
 st.set_page_config(layout="wide")
