@@ -6,7 +6,7 @@ requirements = [x.strip() for x in content]
 
 setup(name="CryptoAssistantStreamlit",
       version="1.0",
-      description="portfolio mamager of crypto assistant - streamlit",
+      description="user interface of crypto assistant - streamlit",
       packages=find_packages(),
       include_package_data=True,  # includes in package files from MANIFEST.in
       install_requires=requirements)
