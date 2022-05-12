@@ -27,7 +27,7 @@ col1, col2 = st.columns(2)
 name = col1.text_input('Portfolio Name',value = 'enter your portfolio name here')
 ps_init_assets = col2.number_input('Initial Funding (USD)',min_value = 10, value = 1000,format='%d')
 
-date_ = datetime(2022,5,2)
+date_ = datetime(2022,5,11)
 date_str = date_.strftime("%Y-%m-%d")+"_00:00:00"
 
 st.write('💰 Please choose the coins and ratios of you current portfolio:')
@@ -55,6 +55,8 @@ if coin_3 == coin_2 or coin_3 == coin_1:
 ratio_3 = col2.slider('Please choose the ratio you want to invest in coin3:',0,100,100-ratio_1-ratio_2)
 coins.append(coin_3)
 ratios.append(ratio_3)
+coins.append('stable')
+ratios.append(0)
 #################### user input #########################
 
 
@@ -74,8 +76,8 @@ params = dict(
 
 # url = "http://127.0.0.1:8000"
 url = "https://cryptoassistantimageamd64-c7z3tydiqq-df.a.run.app"
-# api_url = f'{url}/get_pf'
-api_url = f'{url}/get_pf_random'
+api_url = f'{url}/get_pf'
+# api_url = f'{url}/get_pf_random'
 ###################### params ###########################
 
 
@@ -93,10 +95,14 @@ if col2.button('Done') and st.session_state['button2_click']==False:
     if response.status_code == 200:
         print("API call success")
         print("portfolio name:", response.json().get('portfolio_name', 'portfolio not found'))
-        pf= pd.read_json(response.json().get('portfolio', 'portfolio not found'))
-        st.session_state['pf']=pf
+        pf_status = response.json().get('portfolio_status', 'portfolio status not found')
+        if pf_status == 'ready':
+            pf= pd.read_json(response.json().get('portfolio', 'portfolio not found'))
+            st.session_state['pf']=pf
+        else:
+            st.write(pf_status)
     else:
-        st.write("API call error")
+        st.write(f"API call error{response.status_code}")
 
     if ratio_1 + ratio_2+ ratio_3 != 100:
         st.error('The total ratio should be 100')
@@ -119,6 +125,7 @@ if col2.button('Done') and st.session_state['button2_click']==False:
 if st.session_state['button1_click'] or st.session_state['button2_click']:
     st.write('📈 Performance with Buy&Hold Strategy:')
     pf = st.session_state['pf']
+    pf.rename(columns = {'t_bh_val':'Buy&Hold', 't_ai_val':'AI Reallocate','t_ai_stable':'Stable','t_bh_val':'Asset(USD)'}, inplace = True)
     asset_df_init = pd.DataFrame({'coins':coins,'ratios':ratios})
 
 # pie chart of asset allocation
@@ -127,11 +134,12 @@ if st.session_state['button1_click'] or st.session_state['button2_click']:
                       color='coins',
                       color_discrete_map={coin_1:'#9ACD32',
                                  coin_2:'#228B22',
-                                 coin_3:'#ebaa00'
+                                 coin_3:'#6B8E23',
+                                 'Stable':'#ebaa00'
                                  })
 
 # line chart of perfomance in past 20 days
-    line_init = alt.Chart(pf).mark_line().encode(alt.X('date'),alt.Y('t_bh_val',scale=alt.Scale(zero=False)))
+    line_init = alt.Chart(pf).mark_line().encode(alt.X('date'),alt.Y('Asset(USD)',scale=alt.Scale(zero=False)))
 
 # plot charts
     col1, col2 = st.columns((1,2))
@@ -151,53 +159,63 @@ if col2.button('💸 Crypto Assistant, help to adjust my porflio, please! 💸')
     st.write('📈 Performance with AI Reallocation Strategy:')
 
     pf = st.session_state['pf']
-    pf_val = pf[['date','t_bh_val','t_ai_val']]
-    pf_val.rename(columns = {'t_bh_val':'Buy&Hold', 't_ai_val':'AI Reallocate'}, inplace = True)
+    pf_val = pf[['date','Asset(USD)','AI Reallocate']]
+    pf_val.rename(columns = {'Asset(USD)':'Buy&Hold'}, inplace = True)
     pf_val = pd.melt(pf_val,id_vars =['date'], value_vars =['Buy&Hold','AI Reallocate'])
-    pf_val.rename(columns = {'value':'asset', 'variable':'legend'}, inplace = True)
+    pf_val.rename(columns = {'value':'Asset(USD)', 'variable':'Legend'}, inplace = True)
 
     line_new = alt.Chart(pf_val).mark_line().encode(
                                             alt.X('date'),
-                                            alt.Y('asset',scale=alt.Scale(zero=False)),
-                                            color='legend',
-                                            strokeDash='legend').properties(
-                                                                        width=1520,
+                                            alt.Y('Asset(USD)',scale=alt.Scale(zero=False)),
+                                            color='Legend',
+                                            strokeDash='Legend').properties(
+                                                                        width=1510,
                                                                         height=250
                                                                     )
     st.altair_chart(line_new,use_container_width=False)
 
 # bar charts of reallocation in past 20 days
-    ratio_df = pf[['date',f'{coin_1}_ai_alloc',f'{coin_2}_ai_alloc',f'{coin_3}_ai_alloc']]
+    # prepare dataframe
+    ratio_df = pf[['date',f'{coin_1}_ai_alloc',f'{coin_2}_ai_alloc',f'{coin_3}_ai_alloc','Stable']]
     ratio_df.rename(columns = {
                         f'{coin_1}_ai_alloc':coin_1,
                         f'{coin_2}_ai_alloc':coin_2,
                         f'{coin_3}_ai_alloc':coin_3}, inplace = True)
-    ratio_df = pd.melt(ratio_df,id_vars =['date'], value_vars =[coin_1,coin_2,coin_3])
+    #exclude negtive ratios
+    # ratio_df[coin_1]= ratio_df[coin_1].apply(lambda x: 0 if x<0 else x)
+    # ratio_df[coin_2]= ratio_df[coin_2].apply(lambda x: 0 if x<0 else x)
+    # ratio_df[coin_3]= ratio_df[coin_3].apply(lambda x: 0 if x<0 else x)
+    # prepare the right format for plotting
+    ratio_df = pd.melt(ratio_df,id_vars =['date'], value_vars =[coin_1,coin_2,coin_3,'Stable'])
     ratio_df.rename(columns = {'value':'Ratios(%)', 'variable':'Coins'}, inplace = True)
-
+    #plot
     bar_chart = px.bar(ratio_df, x='date', y='Ratios(%)', color='Coins',
                      color_discrete_map={coin_1:'#9ACD32',
                                         coin_2:'#228B22',
-                                        coin_3:'#ebaa00'
+                                        coin_3:'#6B8E23',
+                                        'Stable':'#ebaa00'
                                         },title='Portfolio Reallocations')
     st.plotly_chart(bar_chart,use_container_width=True)
+    # pf
 
 # recllocation pie chart
     ratios_new = [
         pf.iloc[-1][f'{coin_1}_ai_alloc'],
         pf.iloc[-1][f'{coin_2}_ai_alloc'],
-        pf.iloc[-1][f'{coin_3}_ai_alloc']
+        pf.iloc[-1][f'{coin_3}_ai_alloc'],
+        pf.iloc[-1]['Stable']
     ]
     asset_df_new = pd.DataFrame({'coins':coins,'init_ratio':ratios,'ratio_new':ratios_new})
 
     st.markdown("<h4 style='text-align: center;'>📈 Suggested Allocation For Tomorrow 📈</h4>", unsafe_allow_html=True)
-
+    # asset_df_new
     pie_new = px.pie(asset_df_new,values='ratio_new',names='coins',
                      height=400,
                      color='coins',
                      color_discrete_map={coin_1:'#9ACD32',
                                         coin_2:'#228B22',
-                                        coin_3:'#ebaa00'
+                                        coin_3:'#6B8E23',
+                                        'Stable':'#ebaa00'
                                         })
     col1, col2, col3 = st.columns((1,3,1))
     col2.plotly_chart(pie_new)
