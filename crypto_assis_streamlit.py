@@ -24,8 +24,8 @@ st.markdown("<h1 style='text-align: center; color: green;'>🪙 Crypto Assistant
 #########################################################
 st.write('📂 Please initiate your portfolio:')
 col1, col2 = st.columns(2)
-name = col1.text_input('Portfolio Name',value = 'enter your portfolio name here')
-ps_init_assets = col2.number_input('Initial Funding (USD)',min_value = 10, value = 1000,format='%d')
+name = col1.text_input('Portfolio Name')
+ps_init_assets = col2.number_input('Initial Funding (USD)',min_value = 0,format='%d')
 
 date_ = datetime(2022,5,11)
 date_str = date_.strftime("%Y-%m-%d")+"_00:00:00"
@@ -85,27 +85,33 @@ api_url = f'{url}/get_pf'
 #########################################################
 # call the API
 m = st.markdown(""" <style> div.stButton > button{ width:50em;height:3em;background-color:#edf8ee} </style>""", unsafe_allow_html=True)
+
+agree = st.checkbox('Crypto assistant cannot take any responsibilities in case of loss or profits with the advises presented below. (However, if profits, you can send us a cut😀.')
+
 col1, col2, col3 = st.columns((1,3,1))
 if col2.button('Done') and st.session_state['button2_click']==False:
-    st.session_state['button1_click']=True
-    response = requests.get(
-        api_url,
-        params=params
-    )
-    if response.status_code == 200:
-        print("API call success")
-        print("portfolio name:", response.json().get('portfolio_name', 'portfolio not found'))
-        pf_status = response.json().get('portfolio_status', 'portfolio status not found')
-        if pf_status == 'ready':
-            pf= pd.read_json(response.json().get('portfolio', 'portfolio not found'))
-            st.session_state['pf']=pf
-        else:
-            st.write(pf_status)
+    if not agree:
+        st.error('Please click the agreement above.')
     else:
-        st.write(f"API call error{response.status_code}")
+        st.session_state['button1_click']=True
+        response = requests.get(
+            api_url,
+            params=params
+        )
+        if response.status_code == 200:
+            print("API call success")
+            print("portfolio name:", response.json().get('portfolio_name', 'portfolio not found'))
+            pf_status = response.json().get('portfolio_status', 'portfolio status not found')
+            if pf_status == 'ready':
+                pf= pd.read_json(response.json().get('portfolio', 'portfolio not found'))
+                st.session_state['pf']=pf
+            else:
+                st.write(pf_status)
+        else:
+            st.write(f"API call error{response.status_code}")
 
-    if ratio_1 + ratio_2+ ratio_3 != 100:
-        st.error('The total ratio should be 100')
+        if ratio_1 + ratio_2+ ratio_3 != 100:
+            st.error('The total ratio should be 100')
     # else:
     #     st.write('📈 Performance of your current portfolio with Buy&Hold Strategy:')
     #     pf = st.session_state['pf']
@@ -139,7 +145,7 @@ if st.session_state['button1_click'] or st.session_state['button2_click']:
                                  })
 
 # line chart of perfomance in past 20 days
-    line_init = alt.Chart(pf).mark_line().encode(alt.X('date'),alt.Y('Asset(USD)',scale=alt.Scale(zero=False)))
+    line_init = alt.Chart(pf).mark_line(color="#FFA500").encode(alt.X('date'),alt.Y('Asset(USD)', scale=alt.Scale(zero=False)))
 
 # plot charts
     col1, col2 = st.columns((1,2))
@@ -169,7 +175,7 @@ if col2.button('💸 Crypto Assistant, help to adjust my porflio, please! 💸')
                                             alt.Y('Asset(USD)',scale=alt.Scale(zero=False)),
                                             color='Legend',
                                             strokeDash='Legend').properties(
-                                                                        width=1510,
+                                                                        width=1300,
                                                                         height=250
                                                                     )
     st.altair_chart(line_new,use_container_width=False)
