@@ -271,7 +271,7 @@ if len(avalable_coins) > 0:
         st.session_state['button2_click']=True
 
         if "pf" not in st.session_state:
-            st.error(("click 'Done' buttin before adjusting your portfolio"))
+            st.error(("Please click 'Done' button before adjusting your portfolio."))
         else:
             # line charts of perfomance comparision in past 20 days
             st.write('📈 Performance with AI Reallocation Strategy:')
