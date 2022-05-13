@@ -221,142 +221,148 @@ if len(avalable_coins) > 0:
 
 
     if st.session_state['button1_click'] or st.session_state['button2_click']:
-        st.write('📈 Performance with Buy&Hold Strategy:')
-        pf = st.session_state['pf']
-        pf.rename(columns = {'t_bh_val':'Buy&Hold',
-                            't_ai_val':'AI Reallocate',
-                            't_ai_stable':'Stable',
-                            't_bh_val':'Asset(USD)'},
-                inplace = True
-                )
 
-        asset_df_init = pd.DataFrame({'coins':coins,'ratios':ratios})
+        if "pf" in st.session_state:
 
-        # pie chart of asset allocation
-        pie_init = px.pie(asset_df_init,values='ratios',names='coins',
-                        height=350,
-                        color='coins',
-                        color_discrete_map={coin_1:'#9ACD32',
-                                    coin_2:'#228B22',
-                                    coin_3:'#6B8E23',
-                                    'Stable':'#ebaa00'
-                                    },
-                        hole=.6)
+            st.write('📈 Performance with Buy&Hold Strategy:')
+            pf = st.session_state['pf']
+            pf.rename(columns = {'t_bh_val':'Buy&Hold',
+                                't_ai_val':'AI Reallocate',
+                                't_ai_stable':'Stable',
+                                't_bh_val':'Asset(USD)'},
+                    inplace = True
+                    )
 
-        # line chart of perfomance in past 20 days
-        line_init = alt.Chart(pf).mark_line(color="#FFA500")\
-            .encode(alt.X('date'),alt.Y('Asset(USD)', scale=alt.Scale(zero=False)))
+            asset_df_init = pd.DataFrame({'coins':coins,'ratios':ratios})
 
-        # plot charts
-        st.altair_chart(line_init, use_container_width=True)
+            # pie chart of asset allocation
+            pie_init = px.pie(asset_df_init,values='ratios',names='coins',
+                            height=350,
+                            color='coins',
+                            color_discrete_map={coin_1:'#9ACD32',
+                                        coin_2:'#228B22',
+                                        coin_3:'#6B8E23',
+                                        'Stable':'#ebaa00'
+                                        },
+                            hole=.6)
 
-        bh_perf = st.session_state['bh_perf']
-        bh_val = st.session_state['bh_val']
+            # line chart of perfomance in past 20 days
+            line_init = alt.Chart(pf).mark_line(color="#FFA500")\
+                .encode(alt.X('date'),alt.Y('Asset(USD)', scale=alt.Scale(zero=False)))
 
-        st.metric("Buy&Hold Strategy",
-                f"${(round(bh_val, 2))}",
-                f"{(round(bh_perf, 3))}%")
+            # plot charts
+            st.altair_chart(line_init, use_container_width=True)
 
-        #################### init charts #########################
+            bh_perf = st.session_state['bh_perf']
+            bh_val = st.session_state['bh_val']
+
+            st.metric("Buy&Hold Strategy",
+                    f"${(round(bh_val, 2))}",
+                    f"{(round(bh_perf, 3))}%")
+
+            #################### init charts #########################
 
 
-        ############## charts after reallocation #################
-        ##########################################################
+            ############## charts after reallocation #################
+            ##########################################################
 
     col1, col2, col3 = st.columns((1,3,1))
     if col2.button('💸 Crypto Assistant, help to adjust my porflio, please! 💸'):
         st.session_state['button2_click']=True
 
-    # line charts of perfomance comparision in past 20 days
-        st.write('📈 Performance with AI Reallocation Strategy:')
+        if "pf" not in st.session_state:
+            st.error(("click 'Done' buttin before adjusting your portfolio"))
+        else:
+            # line charts of perfomance comparision in past 20 days
+            st.write('📈 Performance with AI Reallocation Strategy:')
 
-        pf = st.session_state['pf']
-        pf_val = pf[['date','Asset(USD)','AI Reallocate']]
-        pf_val.rename(columns = {'Asset(USD)':'Buy&Hold'}, inplace = True)
-        pf_val = pd.melt(pf_val,id_vars =['date'],
-                        value_vars =['Buy&Hold','AI Reallocate'])
-        pf_val.rename(columns = {'value':'Asset(USD)',
-                                'variable':'Legend'},
-                    inplace = True)
-
-        line_new = alt.Chart(pf_val).mark_line().encode(
-                                                alt.X('date'),
-                                                alt.Y('Asset(USD)',
-                                                scale=alt.Scale(zero=False)),
-                                                color='Legend',
-                                                strokeDash='Legend').properties(
-                                                    width=1300,
-                                                    height=250)
-
-        st.altair_chart(line_new,use_container_width=False)
-
-        # bar charts of reallocation in past 20 days
-        # prepare dataframe
-        ratio_df = pf[['date',
-                    f'{coin_1}_ai_alloc',
-                    f'{coin_2}_ai_alloc',
-                    f'{coin_3}_ai_alloc','Stable']]
-
-        ratio_df.rename(columns = {
-                            f'{coin_1}_ai_alloc':coin_1,
-                            f'{coin_2}_ai_alloc':coin_2,
-                            f'{coin_3}_ai_alloc':coin_3}, inplace = True)
-        #exclude negtive ratios
-        # ratio_df[coin_1]= ratio_df[coin_1].apply(lambda x: 0 if x<0 else x)
-        # ratio_df[coin_2]= ratio_df[coin_2].apply(lambda x: 0 if x<0 else x)
-        # ratio_df[coin_3]= ratio_df[coin_3].apply(lambda x: 0 if x<0 else x)
-        # prepare the right format for plotting
-        ratio_df = pd.melt(ratio_df,id_vars =['date'],
-                        value_vars =[coin_1,coin_2,coin_3,'Stable'])
-
-        ratio_df.rename(columns = {'value':'Ratios(%)',
-                                'variable':'Coins'},
+            pf = st.session_state['pf']
+            pf_val = pf[['date','Asset(USD)','AI Reallocate']]
+            pf_val.rename(columns = {'Asset(USD)':'Buy&Hold'}, inplace = True)
+            pf_val = pd.melt(pf_val,id_vars =['date'],
+                            value_vars =['Buy&Hold','AI Reallocate'])
+            pf_val.rename(columns = {'value':'Asset(USD)',
+                                    'variable':'Legend'},
                         inplace = True)
 
-        bh_perf = st.session_state['bh_perf']
-        ai_perf = st.session_state['ai_perf']
-        bh_val = st.session_state['bh_val']
-        ai_val = st.session_state['ai_val']
-        st.metric("AI Reallocation Strategy (compare to B&H)",
-                f"${round((ai_val - bh_val), 2)}",
-                f"{round((ai_perf - bh_perf), 2)}%")
+            line_new = alt.Chart(pf_val).mark_line().encode(
+                                                    alt.X('date'),
+                                                    alt.Y('Asset(USD)',
+                                                    scale=alt.Scale(zero=False)),
+                                                    color='Legend',
+                                                    strokeDash='Legend').properties(
+                                                        width=1300,
+                                                        height=250)
 
-        #plot
-        bar_chart = px.bar(ratio_df, x='date', y='Ratios(%)', color='Coins',
-                        color_discrete_map={coin_1:'#9ACD32',
-                                            coin_2:'#228B22',
-                                            coin_3:'#6B8E23',
-                                            'Stable':'#ebaa00'
-                                            },title='Portfolio Reallocations')
-        st.plotly_chart(bar_chart,use_container_width=True)
-        # pf
+            st.altair_chart(line_new,use_container_width=False)
 
-        # recllocation pie chart
-        ratios_new = [
-            pf.iloc[-1][f'{coin_1}_ai_alloc'],
-            pf.iloc[-1][f'{coin_2}_ai_alloc'],
-            pf.iloc[-1][f'{coin_3}_ai_alloc'],
-            pf.iloc[-1]['Stable']
-        ]
-        asset_df_new = pd.DataFrame({'coins':coins,
-                                    'init_ratio':ratios,
-                                    'ratio_new':ratios_new})
+            # bar charts of reallocation in past 20 days
+            # prepare dataframe
+            ratio_df = pf[['date',
+                        f'{coin_1}_ai_alloc',
+                        f'{coin_2}_ai_alloc',
+                        f'{coin_3}_ai_alloc','Stable']]
 
-        st.markdown("<h4 style='text-align: center;'>📈 Suggested Allocation "\
-                    "For Tomorrow 📈</h4>", unsafe_allow_html=True)
+            ratio_df.rename(columns = {
+                                f'{coin_1}_ai_alloc':coin_1,
+                                f'{coin_2}_ai_alloc':coin_2,
+                                f'{coin_3}_ai_alloc':coin_3}, inplace = True)
+            #exclude negtive ratios
+            # ratio_df[coin_1]= ratio_df[coin_1].apply(lambda x: 0 if x<0 else x)
+            # ratio_df[coin_2]= ratio_df[coin_2].apply(lambda x: 0 if x<0 else x)
+            # ratio_df[coin_3]= ratio_df[coin_3].apply(lambda x: 0 if x<0 else x)
+            # prepare the right format for plotting
+            ratio_df = pd.melt(ratio_df,id_vars =['date'],
+                            value_vars =[coin_1,coin_2,coin_3,'Stable'])
 
-        # asset_df_new
-        pie_new = px.pie(asset_df_new,values='ratio_new',names='coins',
-                        height=400,
-                        color='coins',
-                        color_discrete_map={coin_1:'#9ACD32',
-                                            coin_2:'#228B22',
-                                            coin_3:'#6B8E23',
-                                            'Stable':'#ebaa00'
-                                            },
-                        hole=.6)
-        col1, col2, col3 = st.columns((1,3,1))
-        col2.plotly_chart(pie_new)
+            ratio_df.rename(columns = {'value':'Ratios(%)',
+                                    'variable':'Coins'},
+                            inplace = True)
 
-        st.session_state['button1_click']=False
-        st.session_state['button2_click']=False
+            bh_perf = st.session_state['bh_perf']
+            ai_perf = st.session_state['ai_perf']
+            bh_val = st.session_state['bh_val']
+            ai_val = st.session_state['ai_val']
+            st.metric("AI Reallocation Strategy (compare to B&H)",
+                    f"${round((ai_val - bh_val), 2)}",
+                    f"{round((ai_perf - bh_perf), 2)}%")
+
+            #plot
+            bar_chart = px.bar(ratio_df, x='date', y='Ratios(%)', color='Coins',
+                            color_discrete_map={coin_1:'#9ACD32',
+                                                coin_2:'#228B22',
+                                                coin_3:'#6B8E23',
+                                                'Stable':'#ebaa00'
+                                                },title='Portfolio Reallocations')
+            st.plotly_chart(bar_chart,use_container_width=True)
+            # pf
+
+            # recllocation pie chart
+            ratios_new = [
+                pf.iloc[-1][f'{coin_1}_ai_alloc'],
+                pf.iloc[-1][f'{coin_2}_ai_alloc'],
+                pf.iloc[-1][f'{coin_3}_ai_alloc'],
+                pf.iloc[-1]['Stable']
+            ]
+            asset_df_new = pd.DataFrame({'coins':coins,
+                                        'init_ratio':ratios,
+                                        'ratio_new':ratios_new})
+
+            st.markdown("<h4 style='text-align: center;'>📈 Suggested Allocation "\
+                        "For Tomorrow 📈</h4>", unsafe_allow_html=True)
+
+            # asset_df_new
+            pie_new = px.pie(asset_df_new,values='ratio_new',names='coins',
+                            height=400,
+                            color='coins',
+                            color_discrete_map={coin_1:'#9ACD32',
+                                                coin_2:'#228B22',
+                                                coin_3:'#6B8E23',
+                                                'Stable':'#ebaa00'
+                                                },
+                            hole=.6)
+            col1, col2, col3 = st.columns((1,3,1))
+            col2.plotly_chart(pie_new)
+
+            st.session_state['button1_click']=False
+            st.session_state['button2_click']=False
