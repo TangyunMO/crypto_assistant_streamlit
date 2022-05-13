@@ -11,8 +11,8 @@ from PIL import Image
 
 ############################
 ## SERVER CONF.
-url = "http://127.0.0.1:8000"
-# url = "https://cryptoassistantimageamd64-c7z3tydiqq-df.a.run.app"
+# url = "http://127.0.0.1:8000"
+url = "https://cryptoassistantimageamd64-c7z3tydiqq-df.a.run.app"
 
 # date_ = datetime(2022,5,13)
 date_ = datetime.now()
@@ -24,16 +24,22 @@ st.set_page_config(
      layout="wide"
 )
 
-#dl server avalaible coins
-api_url = f'{url}/get_avalaible_coins'
-response = requests.get(api_url)
-if response.status_code != 200:
-    st.error(("API call error"))
-else:
-    print("API call success")
-    avalable_coins = response.json().get('avalaible_coins', [])
-    # avalable_coins = ['AAVE','BTC','DOT','ETH','FTM','NEAR','SOL','VITE', 'ADA']
+avalable_coins = st.session_state['avalable_coins']
+print(f'avalable_coins: {avalable_coins}')
+st.write(f'avalable_coins: {avalable_coins}')
+if len(avalable_coins) == 0:
+    #dl server avalaible coins
+    api_url = f'{url}/get_avalaible_coins'
+    response = requests.get(api_url)
+    if response.status_code != 200:
+        st.error(("API call error"))
+    else:
+        print("API call success")
+        avalable_coins = response.json().get('avalaible_coins', [])
+        st.session_state['avalable_coins']=avalable_coins
+        # avalable_coins = ['AAVE','BTC','DOT','ETH','FTM','NEAR','SOL','VITE', 'ADA']
 
+if len(avalable_coins) > 0:
     if "button1_click" not in st.session_state:
         st.session_state['button1_click']=False
 
