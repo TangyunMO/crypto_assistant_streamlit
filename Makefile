@@ -6,6 +6,9 @@
 install_requirements:
 	@pip install -r requirements.txt
 
+count_lignes:
+	@git ls-files -z | xargs -0 wc -l
+
 # ----------------------------------
 #         HEROKU COMMANDS
 # ----------------------------------
